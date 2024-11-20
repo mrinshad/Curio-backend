@@ -10,7 +10,7 @@ reddit = praw.Reddit(
     user_agent=os.getenv('USER_AGENT')
 )
 
-def get_top_posts_and_comments(query, post_limit=5, comment_limit=3, top_communities=3):
+def get_top_posts_and_comments(query, post_limit=3, comment_limit=3, top_communities=3):
     """Fetches top posts from the top communities based on the query and retrieves comments."""
     post_data = []
     

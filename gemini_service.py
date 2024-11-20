@@ -15,7 +15,7 @@ def analyze_category_of_query(topic):
     Only respond with the category (e.g., 'movie') if it belongs to one of these, or respond with 'not recommendable' if it does not
     Query :  """ + topic
 
-    model = genai.GenerativeModel("gemini-1.5-flash")  # Use the appropriate model
+    model = genai.GenerativeModel("gemini-1.5-flash-8b")  # Use the appropriate model
     # Generate the analysis result from Gemini
     response = model.generate_content(query)
 
@@ -38,18 +38,20 @@ def analyze_comments_with_gemini(post_data):
 
     # Create a prompt for the Gemini model
     prompt = """
-        Generate a tier list for recommendations. Categorize items into the following tiers:
+        Generate a tier list for recommendations. The goal is to categorize relevant items into the following tiers:
         - S Tier: Most Recommended
         - A Tier: Highly Recommended
         - B Tier: Recommended
         - C Tier: Niche or Specialized Audience
-        - Unranked: Items that are mentioned but not recommended.
-        
-        For each item in the list, provide:
-        1. The title of the item (e.g., manga, book, movie, etc.).
-        2. The reason for its recommendation.
-        Make sure the response is structured in a clear, readable format like a dictionary or list of dictionaries, like:
-        
+        - Unranked: Items mentioned but lacking relevance or context.
+
+        Strict requirements:
+        1. Only include specific items directly relevant to the query topic (e.g., specific movies for 'Top Movies of All Time').
+        2. Exclude any general lists, unrelated advice, or discussions that do not refer to specific items within the topic.
+        3. Each item's title must clearly represent an individual work (e.g., a movie, book, or song). Exclude vague or aggregated titles (e.g., "Top 1000 Movies List").
+        4. Provide a concise, context-specific reason for why each item fits its tier.
+
+        Output structure:
         {
             "S Tier": [
                 {"title": "Item 1", "reason": "Reason for recommendation."},
@@ -58,12 +60,25 @@ def analyze_comments_with_gemini(post_data):
             "A Tier": [
                 {"title": "Item 3", "reason": "Reason for recommendation."}
             ],
-            ...
+            "B Tier": [
+                {"title": "Item 4", "reason": "Reason for recommendation."}
+            ],
+            "C Tier": [
+                {"title": "Item 5", "reason": "Reason for recommendation."}
+            ],
+            "Unranked": [
+                {"title": "Excluded Item", "reason": "Explanation of irrelevance."}
+            ]
         }
-        Exclude items that do not have enough context or relevance.
-        Here is the data for reference :
 
-    """ + comments_text
+        Remember:
+        - Do not include aggregated lists as titles (e.g., "Top 1000 Movies List").
+        - Exclude items that lack a clear relationship to the topic (e.g., advice, comparisons, societal issues).
+        - Filter out any entries without a specific recommendation or context.
+
+        Here's the reference data for analysis:
+""" + comments_text
+
 
     # try:
     model = genai.GenerativeModel("gemini-1.5-flash")  # Use the appropriate model

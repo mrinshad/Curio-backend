@@ -28,11 +28,12 @@ pip install -r requirements.txt
 CLIENT_ID=your_client_id
 CLIENT_SECRET=your_client_secret
 USER_AGENT=your_user_agent
+GEMINI_API_KEY=your_gemini_api_key
 ```
 ### Run the App
 
 Now you’re all set! Run the app with:
 ```bash
-python main.py
+python -m uvicorn main:app --reload
 ```
 Start exploring the best recommendations and ride the trend with Curio!

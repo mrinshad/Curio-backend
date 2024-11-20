@@ -1,42 +1,54 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from reddit_service import get_top_posts_and_comments
-from gemini_service import analyze_comments_with_gemini,analyze_category_of_query
-from colorama import Fore, Style, init,Back
+from gemini_service import analyze_comments_with_gemini, analyze_category_of_query
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+# Allowing requests from your frontend (localhost:3000)
+origins = [
+    "http://localhost:3000",  # Your frontend URL
+    "http://127.0.0.1:8000",  # If you want to allow backend-to-backend requests
+]
+
+# Adding CORSMiddleware to the FastAPI app
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows all origins in the list
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Define a request model for input validation
+class TopicRequest(BaseModel):
+    topic: str
 
 
-def main():
+@app.post("/recommend")
+async def recommend(topic_request: TopicRequest):
+    topic = topic_request.topic
 
-    print(f"{Fore.YELLOW}{Style.BRIGHT}Disclaimer: {Fore.WHITE}{Style.NORMAL}This may not be the best recommendation since the method of acquiring the correct community and posts may not be fully accurate.\n")
-    print(f"{Back.GREEN}{Fore.BLACK} PLEASE BE PATIENT BECAUSE IT MAY TAKE UPTO 3min {Back.RESET}{Fore.RESET}\n")
-    topic = input("Enter your search term (e.g., 'Top movies of all time'): ")
-    # topic = "Top movies of all time"
+    # Analyze the category of the topic using Gemini
+    category = analyze_category_of_query(topic)
+    if category == "not recommendable":
+        raise HTTPException(status_code=400, detail="The provided topic is not recommendable.")
 
-    response = analyze_category_of_query(topic)
-    print(f"POST Category is  {Fore.LIGHTBLUE_EX}{response}{Fore.WHITE}")
+    # Fetch posts and comments from Reddit
+    try:
+        post_data = get_top_posts_and_comments(topic)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching data from Reddit: {str(e)}")
 
-    # Get top posts and comments from Reddit
-    post_data = get_top_posts_and_comments(topic)
+    # Analyze comments with Gemini to generate a tier list
+    try:
+        tier_list = analyze_comments_with_gemini(post_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing data with Gemini: {str(e)}")
 
-    # Analyze comments with Gemini to create a tier list
-    tier_list = analyze_comments_with_gemini(post_data)
-
-    # loading_bar(100, "Completed!")
-    print("\nTier List based on Reddit Comments:")
-
-    # Display the tier list if available, otherwise show an error message
-
-    if tier_list:
-        for tier, items in tier_list.items():
-            print(f"{tier} Tier:")
-            for item in items:
-                # Ensure item is a dictionary with 'title' and 'reason' keys
-                if isinstance(item, dict) and 'title' in item and 'reason' in item:
-                    print(f"  - {item['title']}: {item['reason']}")
-                else:
-                    print(f"  - {item}: No reason available")  # In case data is not structured properly
-            print()  # Newline between tiers for clarity
-    else:
-        print("Failed to generate tier list.")
-
-
-if __name__ == "__main__":
-    main()
+    # Return the tier list
+    return {
+        "topic": topic,
+        "category": category,
+        "tier_list": tier_list,
+    }
