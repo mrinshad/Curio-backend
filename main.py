@@ -9,7 +9,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",  # Your frontend URL
     "http://127.0.0.1:8000",  # If you want to allow backend-to-backend requests
-    "https://curio-frontend-azure.vercel.app/"
+    "https://curio-frontend-azure.vercel.app"
 ]
 
 # Adding CORSMiddleware to the FastAPI app
