@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from reddit_service import get_top_posts_and_comments
-from gemini_service import analyze_comments_with_gemini, analyze_category_of_query
+from services.reddit_service import get_top_posts_and_comments
+from services.gemini_service import analyze_comments_with_gemini, analyze_category_of_query
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()

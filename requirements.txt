@@ -1,3 +1,6 @@
+fastapi
+uvicorn
+pydantic
 praw
-dotenv
+python-dotenv
 google-generativeai
